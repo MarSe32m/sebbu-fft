@@ -36,21 +36,21 @@ public extension FFT {
         /// ``FFT/fftShift(frequencies:spectrum:)`` to center the zero-frequency bin.
         ///
         /// - Parameters:
-        ///   - x: Equally spaced complex samples.
+        ///   - input: Equally spaced complex samples.
         ///   - spacing: The distance between adjacent samples. Use a finite, positive
         ///     value.
         /// - Returns: Angular frequencies in radians per input-axis unit and the complex
         ///   spectrum at those frequencies. Empty input produces two empty arrays.
         @inlinable
-        public func execute(_ x: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
-            let N = x.count
+        public func execute(_ input: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
+            let N = input.count
             guard N > 0 else { return ([], []) }
 
             let spectrum: [Complex<Double>]
             if N & (N - 1) == 0 {
-                spectrum = FFT.radix2FFT(x)
+                spectrum = FFT.radix2FFT(input)
             } else {
-                spectrum = FFT.bluesteinFFT(x)
+                spectrum = FFT.bluesteinFFT(input)
             }
             let frequencies: [Double] = [Double](unsafeUninitializedCapacity: N) { buffer, initializedCount in
                 initializedCount = N
@@ -97,17 +97,17 @@ public extension FFT {
         /// Computes a normalized inverse discrete Fourier transform.
         ///
         /// - Parameters:
-        ///   - x: Complex frequency bins in unshifted order.
+        ///   - input: Complex frequency bins in unshifted order.
         ///   - spacing: The angular-frequency distance between adjacent bins. Use a
         ///     finite, positive value.
         /// - Returns: Sample positions separated by `2π / (N * spacing)` and the
         ///   reconstructed signal, normalized by `1 / N`. Empty input produces two
         ///   empty arrays.
         @inlinable
-        public func execute(_ x: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
-            let N = x.count
+        public func execute(_ input: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
+            let N = input.count
             guard N > 0 else { return ([], []) }
-            let conjugate = x.map { $0.conjugate }
+            let conjugate = input.map { $0.conjugate }
             var signal: [Complex<Double>]
             if N & (N - 1) == 0 {
                 signal = FFT.radix2FFT(conjugate).map { Complex($0.real / Double(N), -$0.imaginary / Double(N)) }
@@ -131,8 +131,8 @@ internal extension FFT {
     /// - Parameter x: A nonempty array of complex samples.
     /// - Returns: The unnormalized forward transform of `x`.
     @inlinable
-    static func bluesteinFFT(_ x: [Complex<Double>]) -> [Complex<Double>] {
-        let N = x.count
+    static func bluesteinFFT(_ input: [Complex<Double>]) -> [Complex<Double>] {
+        let N = input.count
         let m = (2 * N - 1).nextPowerOfTwo
         let piOverN = Double.pi / Double(N)
         var a = [Complex<Double>](repeating: .zero, count: m)
@@ -140,7 +140,7 @@ internal extension FFT {
         for n in 0..<N {
             let angle = piOverN * Double(n * n)
             let w = Complex(length: 1.0, phase: -angle)
-            a[n] = Relaxed.product(x[n], w)
+            a[n] = Relaxed.product(input[n], w)
             b[n] = w.conjugate
             if n != 0 {
                 b[m - n] = b[n]

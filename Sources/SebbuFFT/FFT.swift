@@ -106,16 +106,17 @@ public enum FFT {
     /// ``fftShift(frequencies:spectrum:)`` when a centered frequency axis is more useful.
     ///
     /// - Parameters:
-    ///   - x: The equally spaced complex input samples.
+    ///   - input: The equally spaced complex input samples.
     ///   - spacing: The distance between adjacent samples. Use a finite, positive
     ///     value. A spacing measured in seconds produces angular frequencies in
     ///     radians per second.
     /// - Returns: The angular-frequency bins and corresponding complex spectrum. Each
-    ///   output array has `x.count` elements; empty input produces two empty arrays.
+    ///   output array has `ipnut.count` elements; empty input produces two empty arrays.
     @inlinable
-    nonisolated public static func fft(_ x: [Complex<Double>], spacing: Double = 1.0) -> (frequencies: [Double], spectrum: [Complex<Double>]) {
-        let plan = defaultFFTPlan(sampleSize: x.count)
-        let (frequencies, spectrum) = plan.execute(x, spacing: spacing)
+    nonisolated public static func fft(_ input: [Complex<Double>], spacing: Double = 1.0) -> (frequencies: [Double], spectrum: [Complex<Double>]) {
+        if input.isEmpty { return ([], []) }
+        let plan = defaultFFTPlan(sampleSize: input.count)
+        let (frequencies, spectrum) = plan.execute(input, spacing: spacing)
         return (frequencies, spectrum)
     }
 
@@ -131,16 +132,17 @@ public enum FFT {
     /// are centered, call ``ifftShift(_:_:)`` first.
     ///
     /// - Parameters:
-    ///   - x: The complex frequency bins in unshifted order.
+    ///   - input: The complex frequency bins in unshifted order.
     ///   - spacing: The angular-frequency distance between adjacent bins. Use a finite,
     ///     positive value. The returned sample positions are separated by
     ///     `2π / (N * spacing)`.
     /// - Returns: The reconstructed sample positions and normalized complex signal.
-    ///   Each output array has `x.count` elements; empty input produces two empty arrays.
+    ///   Each output array has `input.count` elements; empty input produces two empty arrays.
     @inlinable
-    nonisolated public static func ifft(_ x: [Complex<Double>], spacing: Double = 1.0) -> (t: [Double], signal: [Complex<Double>]) {
-        let plan = defaultiFFTPlan(sampleSize: x.count)
-        let (t, signal) = plan.execute(x, spacing: spacing)
+    nonisolated public static func ifft(_ input: [Complex<Double>], spacing: Double = 1.0) -> (t: [Double], signal: [Complex<Double>]) {
+        if input.isEmpty { return ([], []) }
+        let plan = defaultiFFTPlan(sampleSize: input.count)
+        let (t, signal) = plan.execute(input, spacing: spacing)
         return (t, signal)
     }
 

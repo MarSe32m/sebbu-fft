@@ -30,14 +30,14 @@ public extension FFT {
         /// Executes the transform represented by this plan.
         ///
         /// - Parameters:
-        ///   - x: The complex input values. For fixed-size plans, `x.count` must equal
+        ///   - input: The complex input values. For fixed-size plans, `input.count` must equal
         ///     the sample size supplied when the plan was created.
         ///   - spacing: The distance between adjacent input-axis values. Use a finite,
         ///     positive value. Its units and the returned axis depend on the plan's
         ///     transform direction.
         /// - Returns: A pair containing the output axis in `x` and the transformed
         ///   complex values in `y`. Both arrays have the same count as the input.
-        func execute(_ x: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>])
+        func execute(_ input: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>])
     }
 
     /// Creates the plan used by ``FFT/fft(_:spacing:)`` for the current platform.

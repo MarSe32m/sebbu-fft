@@ -33,14 +33,14 @@ public extension FFT {
         /// frequencies first, followed by negative frequencies.
         ///
         /// - Parameters:
-        ///   - x: Equally spaced complex samples. Its count must equal the size used to
+        ///   - input: Equally spaced complex samples. Its count must equal the size used to
         ///     initialize this plan.
         ///   - spacing: The distance between adjacent samples. Use a finite, positive
         ///     value.
         /// - Returns: Angular frequencies in radians per input-axis unit and the complex
         ///   spectrum at those frequencies.
-        public func execute(_ x: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
-            let N = x.count
+        public func execute(_ input: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
+            let N = input.count
             let frequencies: [Double] = [Double](unsafeUninitializedCapacity: N) { buffer, initializedCount in
                 initializedCount = N
                 let upperBound = N.isMultiple(of: 2) ? N/2 : (N/2 + 1)
@@ -59,16 +59,16 @@ public extension FFT {
             }
 
             if let setup = setup {
-                let realParts = x.map { $0.real }
-                let imaginaryParts = x.map { $0.imaginary }
-                var realPartsOutput = [Double](repeating: 0, count: x.count)
-                var imaginaryPartsOutput = [Double](repeating: 0, count: x.count)
+                let realParts = input.map { $0.real }
+                let imaginaryParts = input.map { $0.imaginary }
+                var realPartsOutput = [Double](repeating: 0, count: N)
+                var imaginaryPartsOutput = [Double](repeating: 0, count: N)
                 vDSP_DFT_ExecuteD(setup, realParts, imaginaryParts, &realPartsOutput, &imaginaryPartsOutput)
                 let spectrum = zip(realPartsOutput, imaginaryPartsOutput).map { Complex($0, $1) }
                 return (frequencies, spectrum)
             }
             // Fall back to default implementation
-            let plan = FFTPlan(sampleSize: x.count)
+            let plan = FFTPlan(sampleSize: N)
             return plan.execute(x, spacing: spacing)
         }
 
@@ -100,29 +100,29 @@ public extension FFT {
         /// Computes a normalized inverse discrete Fourier transform.
         ///
         /// - Parameters:
-        ///   - x: Complex frequency bins in unshifted order. Its count must equal the
+        ///   - input: Complex frequency bins in unshifted order. Its count must equal the
         ///     size used to initialize this plan.
         ///   - spacing: The angular-frequency distance between adjacent bins. Use a
         ///     finite, positive value.
         /// - Returns: Sample positions separated by `2π / (N * spacing)` and the
         ///   reconstructed signal, normalized by `1 / N`.
-        public func execute(_ x: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
+        public func execute(_ input: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
             let N = x.count
             let range = (0..<N)
             let denominator = spacing * Double(N)
             let t = range.map { 2.0 * .pi * Double($0) / denominator }
 
             if let setup = setup {
-                let realParts = x.map { $0.real }
-                let imaginaryParts = x.map { $0.imaginary }
-                var realPartsOutput = [Double](repeating: 0, count: x.count)
-                var imaginaryPartsOutput = [Double](repeating: 0, count: x.count)
+                let realParts = input.map { $0.real }
+                let imaginaryParts = input.map { $0.imaginary }
+                var realPartsOutput = [Double](repeating: 0, count: N)
+                var imaginaryPartsOutput = [Double](repeating: 0, count: N)
                 vDSP_DFT_ExecuteD(setup, realParts, imaginaryParts, &realPartsOutput, &imaginaryPartsOutput)
                 let signal = zip(realPartsOutput, imaginaryPartsOutput).map { Complex($0 / Double(N), $1 / Double(N)) }
                 return (t, signal)
             }
             // Fall back to default implementation
-            let plan = iFFTPlan(sampleSize: x.count)
+            let plan = iFFTPlan(sampleSize: N)
             return plan.execute(x, spacing: spacing)
         }
 

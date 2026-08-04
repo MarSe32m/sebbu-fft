@@ -26,7 +26,7 @@ Add the package in `Package.swift`:
 dependencies: [
     .package(
         url: "https://github.com/MarSe32m/sebbu-fft.git",
-        from: "0.1.0"
+        from: "0.2.0"
     )
 ]
 ```
@@ -174,7 +174,7 @@ contains one operation:
 
 ```swift
 func execute(
-    _ x: [Complex<Double>],
+    _ input: [Complex<Double>],
     spacing: Double
 ) -> (x: [Double], y: [Complex<Double>])
 ```
