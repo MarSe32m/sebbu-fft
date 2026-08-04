@@ -69,7 +69,7 @@ public extension FFT {
             }
             // Fall back to default implementation
             let plan = FFTPlan(sampleSize: N)
-            return plan.execute(x, spacing: spacing)
+            return plan.execute(input, spacing: spacing)
         }
 
         deinit {
@@ -107,7 +107,7 @@ public extension FFT {
         /// - Returns: Sample positions separated by `2π / (N * spacing)` and the
         ///   reconstructed signal, normalized by `1 / N`.
         public func execute(_ input: [Complex<Double>], spacing: Double) -> (x: [Double], y: [Complex<Double>]) {
-            let N = x.count
+            let N = input.count
             let range = (0..<N)
             let denominator = spacing * Double(N)
             let t = range.map { 2.0 * .pi * Double($0) / denominator }
@@ -123,7 +123,7 @@ public extension FFT {
             }
             // Fall back to default implementation
             let plan = iFFTPlan(sampleSize: N)
-            return plan.execute(x, spacing: spacing)
+            return plan.execute(input, spacing: spacing)
         }
 
         deinit {
