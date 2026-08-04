@@ -1,9 +1,5 @@
-//
-// FFT.swift
-// sebbu-fft
-//
-// Created by Sebastian Toivonen on 4.8.2026
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: MIT
 
 import RealModule
 import ComplexModule

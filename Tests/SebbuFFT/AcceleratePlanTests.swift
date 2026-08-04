@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: MIT
+
 #if canImport(Accelerate)
 import Accelerate
 import ComplexModule

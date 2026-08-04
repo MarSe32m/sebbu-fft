@@ -1,9 +1,5 @@
-//
-// Utilities.swift
-// sebbu-fft
-//
-// Created by Sebastian Toivonen on 4.8.2026
-//
+// Copyright (c) 2026 Sebastian Toivonen
+// SPDX-License-Identifier: MIT
 
 internal extension FixedWidthInteger {
     /// The smallest representable power of two greater than or equal to this value.
