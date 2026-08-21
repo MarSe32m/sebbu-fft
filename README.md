@@ -17,6 +17,7 @@ interface without making a native FFT library part of the core dependency graph.
 - Reusable plans for repeated, fixed-size transforms
 - A pure-Swift radix-2 implementation with Bluestein fallback for other sizes
 - Conditional Accelerate-backed plan types
+- One-dimensional direct and fast non-equispaced transforms and their adjoints
 
 ## Installation
 
@@ -119,6 +120,66 @@ Both operations use unshifted bin order. Call `fftShift` only when a centered
 ordering is useful and restore the original order with `ifftShift` before an
 inverse transform.
 
+## Non-equispaced transforms
+
+`FFT.nfft` evaluates a Fourier series at arbitrary positions. Its coefficients
+use centered wave-number order, `-N / 2 ..< N / 2`, and the positions are
+expressed in turns with period one:
+
+```swift
+let positions = [-0.43, -0.12, 0.07, 0.31]
+let coefficients: [Complex<Double>] = /* an even number of values */
+
+let values = FFT.nfft(coefficients, at: positions)
+```
+
+The default implementation uses a Gaussian interpolation window, a three-times
+oversampled regular grid and a requested tolerance of `1e-8`. Configure these
+controls when needed:
+
+```swift
+let configuration = FFT.NFFTConfiguration(
+    oversamplingFactor: 4,
+    tolerance: 1e-10
+)
+
+let values = FFT.nfft(
+    coefficients,
+    at: positions,
+    configuration: configuration
+)
+```
+
+For repeated transforms with the same coefficient count and positions, reuse a
+plan so that the interpolation stencil, deconvolution factors and regular FFT
+plan are constructed only once:
+
+```swift
+let plan = FFT.NFFTPlan(
+    positions: positions,
+    coefficientCount: coefficients.count,
+    configuration: configuration
+)
+
+for coefficients in coefficientBlocks {
+    let values = plan.execute(coefficients)
+    // Consume values.
+}
+```
+
+The related APIs are:
+
+- `FFT.ndft`: direct `O(MN)` forward transform, useful as a small-problem oracle
+- `FFT.nfft`: approximate fast forward transform
+- `FFT.ndftAdjoint`: direct adjoint transform
+- `FFT.nfftAdjoint`: approximate fast adjoint transform
+- `FFT.NFFTPlan` and `FFT.NFFTAdjointPlan`: reusable forward and adjoint plans
+
+The fast transform has approximate complexity
+`O(σN log(σN) + Mm)`, where `σ` is the oversampling factor and `2m` is the
+interpolation-stencil width. An explicit regular `FFT.Plan` can be supplied to
+either NFFT plan when an application wants to select its backend.
+
 ## Reusing plans
 
 The one-shot functions create a default plan for each call. For a sequence of
@@ -182,7 +243,7 @@ func execute(
 A conforming plan should:
 
 1. Own and release any backend-specific planning resources.
-2. Require `x.count` to match the plan's configured sample size.
+2. Require `input.count` to match the plan's configured sample size.
 3. Return exactly one axis value and one transformed value per input element.
 4. Use an unnormalized negative-exponent forward transform or a `1 / N`-normalized
    positive-exponent inverse transform.
@@ -203,6 +264,12 @@ not encode transform direction.
 - Plan reuse can avoid repeated setup costs, but execution-time allocation
   depends on the selected backend.
 - Thread-safety is a property of each plan implementation, not of the protocol itself.
+
+## Acknowledgements
+
+The one-dimensional NFFT implementation is inspired by Jake VanderPlas's
+[MIT-licensed `nfft` package](https://github.com/jakevdp/nfft). See
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for its copyright notice.
 
 ## License
 
